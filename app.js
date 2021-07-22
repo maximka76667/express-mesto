@@ -24,8 +24,4 @@ app.use((req, res, next) => {
 app.use('/cards', require('./routes/cards'));
 app.use('/users', require('./routes/users'));
 
-app.use((err, req, res, next) => {
-  console.error(err);
-})
-
 app.listen(3000);
