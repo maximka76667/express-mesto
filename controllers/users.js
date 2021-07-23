@@ -7,8 +7,10 @@ const {
 
 const getUsers = (req, res) => {
   User.find({})
-    .then((users) => res.send({ users }))
-    .catch((err) => handleError(err, res));
+    .then((users) => {
+      res.send({ users });
+    })
+    .catch((err) => handleError(err, res, {}));
 };
 
 const getUserById = (req, res) => {
@@ -57,7 +59,7 @@ const updateUser = (req, res) => {
       err,
       res,
       {
-        valdationErrorMessage: errorConfig.validationErrorMessages.users.updateUser,
+        validationErrorMessage: errorConfig.validationErrorMessages.users.updateUser,
         notFoundErrorMessage: errorConfig.notFoundErrorMessages.users,
       },
     ));
@@ -77,7 +79,7 @@ const updateAvatar = (req, res) => {
       err,
       res,
       {
-        valdationErrorMessage: errorConfig.validationErrorMessages.users.updateAvatar,
+        validationErrorMessage: errorConfig.validationErrorMessages.users.updateAvatar,
         notFoundErrorMessage: errorConfig.notFoundErrorMessages.users,
       },
     ));

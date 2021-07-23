@@ -24,4 +24,8 @@ app.use((req, res, next) => {
 app.use('/cards', require('./routes/cards'));
 app.use('/users', require('./routes/users'));
 
+app.use((req, res) => {
+  res.status(404).send({ message: 'Запрашиваемый маршрут не существует.' });
+});
+
 app.listen(3000);
