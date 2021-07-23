@@ -1,26 +1,22 @@
 const Card = require('../models/card');
-
-const VALIDATIOD_ERROR_CODE = 400;
-const NOT_FOUND_ERROR_CODE = 404;
-const DEFAULT_ERROR_CODE = 500;
+const {
+  errorConfig,
+  handleError,
+  NotFoundError,
+} = require('../utils/constants');
 
 const getCards = (req, res) => {
   Card.find({})
     .populate('user')
     .then((cards) => res.send({ cards }))
-    .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: 'Произошла ошибка' }));
+    .catch((err) => handleError(err, res));
 };
 
 const createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ card }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(VALIDATIOD_ERROR_CODE).send({ message: 'Переданы некорректные данные при создании карточки.' });
-      }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: 'Произошла ошибка.' });
-    });
+    .catch((err) => handleError(err, res, errorConfig.validationErrorMessages.cards.createCard));
 };
 
 const deleteCard = (req, res) => {
@@ -28,11 +24,17 @@ const deleteCard = (req, res) => {
   Card.findByIdAndDelete(cardId)
     .then((card) => {
       if (!card) {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Карточка с указанным _id не найдена.' });
+        throw new NotFoundError();
       }
       return res.send({ card });
     })
-    .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: 'Произошла ошибка' }));
+    .catch((err) => handleError(
+      err,
+      res,
+      {
+        notFoundErrorMessage: errorConfig.notFoundErrorMessages.cards,
+      },
+    ));
 };
 
 const likeCard = (req, res) => {
@@ -50,16 +52,18 @@ const likeCard = (req, res) => {
   )
     .then((card) => {
       if (!card) {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Карточка с указанным _id не найдена.' });
+        throw new NotFoundError();
       }
       return res.send({ card });
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(VALIDATIOD_ERROR_CODE).send({ message: 'Переданы некорректные данные для постановки лайка.' });
-      }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: 'Произошла ошибка.' });
-    });
+    .catch((err) => handleError(
+      err,
+      res,
+      {
+        validationErrorMessage: errorConfig.validationErrorMessages.cards.likeCard,
+        notFoundErrorMessage: errorConfig.notFoundErrorMessages.cards,
+      },
+    ));
 };
 
 const dislikeCard = (req, res) => {
@@ -77,16 +81,18 @@ const dislikeCard = (req, res) => {
   )
     .then((card) => {
       if (!card) {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Карточка с указанным _id не найдена.' });
+        throw new NotFoundError();
       }
       return res.send({ card });
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(VALIDATIOD_ERROR_CODE).send({ message: 'Переданы некорректные данные для снятия лайка.' });
-      }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: 'Произошла ошибка.' });
-    });
+    .catch((err) => handleError(
+      err,
+      res,
+      {
+        validationErrorMessage: errorConfig.validationErrorMessages.cards.dislikeCard,
+        notFoundErrorMessage: errorConfig.notFoundErrorMessages.cards,
+      },
+    ));
 };
 
 module.exports = {
