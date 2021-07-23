@@ -7,14 +7,14 @@ const DEFAULT_ERROR_CODE = 500;
 const getCards = (req, res) => {
   Card.find({})
     .populate('user')
-    .then((cards) => res.send(cards))
+    .then((cards) => res.send({ cards }))
     .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: 'Произошла ошибка' }));
 };
 
 const createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
-    .then((card) => res.send(card))
+    .then((card) => res.send({ card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(VALIDATIOD_ERROR_CODE).send({ message: 'Переданы некорректные данные при создании карточки.' });
@@ -30,7 +30,7 @@ const deleteCard = (req, res) => {
       if (!card) {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Карточка с указанным _id не найдена.' });
       }
-      return res.send(card);
+      return res.send({ card });
     })
     .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: 'Произошла ошибка' }));
 };
@@ -52,7 +52,7 @@ const likeCard = (req, res) => {
       if (!card) {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Карточка с указанным _id не найдена.' });
       }
-      return res.send(card);
+      return res.send({ card });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -79,7 +79,7 @@ const dislikeCard = (req, res) => {
       if (!card) {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Карточка с указанным _id не найдена.' });
       }
-      return res.send(card);
+      return res.send({ card });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
