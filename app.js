@@ -2,8 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
-const { celebrate, Joi, errors } = require('celebrate');
+const { celebrate, Joi } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
+const auth = require('./middlewares/auth');
+const NotFoundError = require('./errors/not-found-error');
+const ConflictError = require('./errors/conflict-error');
 
 const app = express();
 
@@ -23,32 +26,44 @@ app.post('/sign-up', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    link: Joi.string().min(2),
+    avatar: Joi.string().min(2),
     email: Joi.string().required(),
     password: Joi.string().required(),
   }),
 }), createUser);
+
 app.post('/sign-in', login);
 
-app.use(require('./middlewares/auth'));
+app.use('/cards', auth, require('./routes/cards'));
+app.use('/users', auth, require('./routes/users'));
 
-app.use('/cards', require('./routes/cards'));
-app.use('/users', require('./routes/users'));
-
-app.use((req, res) => {
-  res.status(404).send({ message: 'Запрашиваемый маршрут не существует.' });
+app.use((req, res, next) => {
+  next(new NotFoundError('Запрашиваемый маршрут не найден'));
 });
 
-app.use(errors());
+app.use((err, req, res, next) => {
+  if (err.name === 'MongoError' && err.code === 11000) {
+    next(new ConflictError('Почтовый адрес уже используется'));
+  }
+  next(err);
+});
 
 app.use((err, req, res, next) => {
-  const { statusCode = 500, message = 'На сервере произошла ошибка' } = err;
+  const { statusCode = 500 } = err;
+  let { message = 'На сервере произошла ошибка' } = err;
+
+  if (err.errors) {
+    const property = err.message.split(': ')[1];
+    message = err.errors[property].message;
+  }
+
+  console.log(err);
 
   res
     .status(statusCode)
     .send({ message });
 
-  next(err);
+  next();
 });
 
 app.listen(3000);

@@ -1,7 +1,8 @@
 const Card = require('../models/card');
-const {
-  NotFoundError,
-} = require('../utils/constants');
+const NotFoundError = require('../errors/not-found-error');
+const { errorMessages } = require('../errors/error-config');
+
+const notFoundErrorMessage = errorMessages.notFoundErrorMessages.cards;
 
 const getCards = (req, res, next) => {
   Card.find({})
@@ -28,7 +29,7 @@ const deleteCard = (req, res, next) => {
       return Card.findByIdAndDelete(cardId)
         .then((deletedCard) => {
           if (!deletedCard) {
-            throw new NotFoundError();
+            throw new NotFoundError(notFoundErrorMessage);
           }
           return res.send({ deletedCard });
         })
@@ -51,7 +52,7 @@ const likeCard = (req, res, next) => {
   )
     .then((card) => {
       if (!card) {
-        throw new NotFoundError();
+        throw new NotFoundError(notFoundErrorMessage);
       }
       return res.send({ card });
     })
@@ -73,7 +74,7 @@ const dislikeCard = (req, res, next) => {
   )
     .then((card) => {
       if (!card) {
-        throw new NotFoundError();
+        throw new NotFoundError(notFoundErrorMessage);
       }
       return res.send({ card });
     })

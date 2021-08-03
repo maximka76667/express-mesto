@@ -1,9 +1,10 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const {
-  NotFoundError,
-} = require('../utils/constants');
+const NotFoundError = require('../errors/not-found-error');
+const { errorMessages } = require('../errors/error-config');
+
+const notFoundErrorMessage = errorMessages.notFoundErrorMessages.users;
 
 const getUsers = (req, res, next) => {
   User.find({})
@@ -26,7 +27,7 @@ const getUserById = (req, res, next) => {
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        throw new NotFoundError();
+        throw new NotFoundError(notFoundErrorMessage);
       }
       return res.send({ user });
     })
@@ -45,10 +46,12 @@ const createUser = (req, res, next) => {
           User.create({
             name, about, avatar, email, password: hash,
           })
-            .then((user) => res.send({ user })),
+            .then((user) => res.send({ user }))
+            .catch(next),
         )
         .catch(next);
-    });
+    })
+    .catch(next);
 };
 
 const updateUser = (req, res, next) => {
@@ -57,7 +60,7 @@ const updateUser = (req, res, next) => {
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        throw new NotFoundError();
+        throw new NotFoundError(notFoundErrorMessage);
       }
       return res.send({ user });
     })
@@ -70,7 +73,7 @@ const updateAvatar = (req, res, next) => {
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        throw new NotFoundError();
+        throw new NotFoundError(notFoundErrorMessage);
       }
       return res.send({ user });
     })
@@ -94,6 +97,7 @@ const login = (req, res, next) => {
           httpOnly: true,
           sameSite: true,
         })
+        .send({ message: 'Успешно' })
         .end();
     })
     .catch(next);

@@ -1,8 +1,11 @@
 const BAD_REQUEST_ERROR_CODE = 400;
+const UNAUTHORIZED_ERROR_CODE = 401;
+const FORBIDDEN_ERROR_CODE = 403;
 const NOT_FOUND_ERROR_CODE = 404;
+const CONFLICT_ERROR_CODE = 409;
 const DEFAULT_ERROR_CODE = 500;
 
-const errorConfig = {
+const errorMessages = {
   validationErrorMessages: {
     cards: {
       createCard: 'Переданы некорректные данные при создании карточки.',
@@ -15,6 +18,8 @@ const errorConfig = {
       updateAvatar: 'Переданы некорректные данные при обновлении аватара.',
     },
   },
+  unauthorizedErrorMessage: 'Неправильные почта или пароль',
+  forbiddenErrorMessage: 'Необходима авторизация',
   notFoundErrorMessages: {
     cards: 'Карточка с указанным _id не найдена.',
     users: 'Пользователь по указанному _id не найден.',
@@ -23,37 +28,12 @@ const errorConfig = {
   defaultErrorMessage: 'Произошла ошибка.',
 };
 
-const handleError = (
-  err,
-  res,
-  {
-    validationErrorMessage,
-    notFoundErrorMessage,
-  },
-) => {
-  switch (err.name) {
-    case 'ValidationError':
-      return res.status(BAD_REQUEST_ERROR_CODE).send({ message: validationErrorMessage });
-    case 'CastError':
-      return res.status(BAD_REQUEST_ERROR_CODE).send({ message: errorConfig.castErrorMessage });
-    case 'NotFoundError':
-      return res.status(NOT_FOUND_ERROR_CODE).send({ message: notFoundErrorMessage });
-    default:
-      return res.status(DEFAULT_ERROR_CODE).send({ message: errorConfig.defaultErrorMessage });
-  }
-};
-
-function NotFoundError() {
-  Error.call(this);
-  this.name = 'NotFoundError';
-  this.message = 'Not Found';
-  this.stack = (new Error()).stack;
-}
-
-NotFoundError.prototype = Object.create(Error.prototype);
-
 module.exports = {
-  errorConfig,
-  handleError,
-  NotFoundError,
+  BAD_REQUEST_ERROR_CODE,
+  UNAUTHORIZED_ERROR_CODE,
+  FORBIDDEN_ERROR_CODE,
+  NOT_FOUND_ERROR_CODE,
+  CONFLICT_ERROR_CODE,
+  DEFAULT_ERROR_CODE,
+  errorMessages,
 };
