@@ -32,7 +32,15 @@ app.post('/sign-up', celebrate({
   }),
 }), createUser);
 
-app.post('/sign-in', login);
+app.post('/sign-in', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().min(2),
+    email: Joi.string().required(),
+    password: Joi.string().required(),
+  }),
+}), login);
 
 app.use('/cards', auth, require('./routes/cards'));
 app.use('/users', auth, require('./routes/users'));
@@ -56,8 +64,6 @@ app.use((err, req, res, next) => {
     const property = err.message.split(': ')[1];
     message = err.errors[property].message;
   }
-
-  console.log(err);
 
   res
     .status(statusCode)
