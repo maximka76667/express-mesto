@@ -1,49 +1,42 @@
 const Card = require('../models/card');
 const {
-  errorConfig,
-  handleError,
   NotFoundError,
 } = require('../utils/constants');
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Card.find({})
     .populate('user')
     .then((cards) => res.send({ cards }))
-    .catch((err) => handleError(err, res, {}));
+    .catch(next);
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ card }))
-    .catch((err) => handleError(
-      err,
-      res,
-      {
-        validationErrorMessage: errorConfig.validationErrorMessages.cards.createCard,
-      },
-    ));
+    .catch(next);
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
-  Card.findByIdAndDelete(cardId)
+
+  Card.findById(cardId)
     .then((card) => {
-      if (!card) {
-        throw new NotFoundError();
+      if (!card.owned._id === req.user._id) {
+        return res.status(500).send({ message: 'Вы не можете удалить чужую карточку' });
       }
-      return res.send({ card });
-    })
-    .catch((err) => handleError(
-      err,
-      res,
-      {
-        notFoundErrorMessage: errorConfig.notFoundErrorMessages.cards,
-      },
-    ));
+      return Card.findByIdAndDelete(cardId)
+        .then((deletedCard) => {
+          if (!deletedCard) {
+            throw new NotFoundError();
+          }
+          return res.send({ deletedCard });
+        })
+        .catch(next);
+    });
 };
 
-const likeCard = (req, res) => {
+const likeCard = (req, res, next) => {
   const { cardId } = req.params;
   Card.findByIdAndUpdate(
     cardId,
@@ -62,17 +55,10 @@ const likeCard = (req, res) => {
       }
       return res.send({ card });
     })
-    .catch((err) => handleError(
-      err,
-      res,
-      {
-        validationErrorMessage: errorConfig.validationErrorMessages.cards.likeCard,
-        notFoundErrorMessage: errorConfig.notFoundErrorMessages.cards,
-      },
-    ));
+    .catch(next);
 };
 
-const dislikeCard = (req, res) => {
+const dislikeCard = (req, res, next) => {
   const { cardId } = req.params;
   Card.findByIdAndUpdate(
     cardId,
@@ -91,14 +77,7 @@ const dislikeCard = (req, res) => {
       }
       return res.send({ card });
     })
-    .catch((err) => handleError(
-      err,
-      res,
-      {
-        validationErrorMessage: errorConfig.validationErrorMessages.cards.dislikeCard,
-        notFoundErrorMessage: errorConfig.notFoundErrorMessages.cards,
-      },
-    ));
+    .catch(next);
 };
 
 module.exports = {
