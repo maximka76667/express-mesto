@@ -7,6 +7,8 @@ const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const NotFoundError = require('./errors/not-found-error');
 const ConflictError = require('./errors/conflict-error');
+const BadRequestError = require('./errors/bad-request-error');
+const { errorMessages, DEFAULT_ERROR_CODE } = require('./errors/error-config');
 
 const app = express();
 
@@ -22,7 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(cookieParser());
 
-app.post('/sign-up', celebrate({
+app.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
@@ -32,38 +34,40 @@ app.post('/sign-up', celebrate({
   }),
 }), createUser);
 
-app.post('/sign-in', celebrate({
+app.post('/signin', celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string().min(2),
     email: Joi.string().required(),
     password: Joi.string().required(),
   }),
 }), login);
 
-app.use('/cards', auth, require('./routes/cards'));
-app.use('/users', auth, require('./routes/users'));
+app.use(auth);
+
+app.use('/cards', require('./routes/cards'));
+app.use('/users', require('./routes/users'));
 
 app.use((req, res, next) => {
-  next(new NotFoundError('Запрашиваемый маршрут не найден'));
+  next(new NotFoundError(errorMessages.notFoundErrorMessages.routes));
 });
 
 app.use((err, req, res, next) => {
   if (err.name === 'MongoError' && err.code === 11000) {
-    next(new ConflictError('Почтовый адрес уже используется'));
+    throw new ConflictError(errorMessages.conflictErrorMessage);
+  }
+  if (err.name === 'ValidationError') {
+    throw new BadRequestError(errorMessages.validationErrorMessage);
+  }
+  if (err.message === 'Validation failed') {
+    throw new BadRequestError(errorMessages.validationErrorMessage);
+  }
+  if (err.name === 'CastError') {
+    throw new BadRequestError(errorMessages.castErrorMessage);
   }
   next(err);
 });
 
 app.use((err, req, res, next) => {
-  const { statusCode = 500 } = err;
-  let { message = 'На сервере произошла ошибка' } = err;
-
-  if (err.errors) {
-    const property = err.message.split(': ')[1];
-    message = err.errors[property].message;
-  }
+  const { statusCode = DEFAULT_ERROR_CODE, message = errorMessages.defaultErrorMessage } = err;
 
   res
     .status(statusCode)

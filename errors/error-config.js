@@ -6,26 +6,17 @@ const CONFLICT_ERROR_CODE = 409;
 const DEFAULT_ERROR_CODE = 500;
 
 const errorMessages = {
-  validationErrorMessages: {
-    cards: {
-      createCard: 'Переданы некорректные данные при создании карточки.',
-      likeCard: 'Переданы некорректные данные для постановки лайка.',
-      dislikeCard: 'Переданы некорректные данные при снятии лайка.',
-    },
-    users: {
-      createUser: 'Переданы некорректные данные при создании пользователя.',
-      updateUser: 'Переданы некорректные данные при обновлении профиля.',
-      updateAvatar: 'Переданы некорректные данные при обновлении аватара.',
-    },
-  },
-  unauthorizedErrorMessage: 'Неправильные почта или пароль',
-  forbiddenErrorMessage: 'Необходима авторизация',
+  validationErrorMessage: 'Переданы некорректные данные',
+  unauthorizedErrorMessage: 'Ошибка авторизации',
+  forbiddenErrorMessage: 'Отказано в доступе',
   notFoundErrorMessages: {
     cards: 'Карточка с указанным _id не найдена.',
     users: 'Пользователь по указанному _id не найден.',
+    routes: 'Запрашиваемый маршрут не найден',
   },
   castErrorMessage: 'Невалидный id ',
-  defaultErrorMessage: 'Произошла ошибка.',
+  conflictErrorMessage: 'Почтовый адрес уже используется',
+  defaultErrorMessage: 'На сервере произошла ошибка',
 };
 
 module.exports = {

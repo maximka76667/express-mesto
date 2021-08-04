@@ -2,8 +2,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-error');
+const ForbiddenError = require('../errors/forbidden-error');
 const { errorMessages } = require('../errors/error-config');
 
+const { forbiddenErrorMessage } = errorMessages;
 const notFoundErrorMessage = errorMessages.notFoundErrorMessages.users;
 
 const getUsers = (req, res, next) => {
@@ -15,7 +17,7 @@ const getUsers = (req, res, next) => {
 };
 
 const getMyUser = (req, res, next) => {
-  User.find({ id: req.user._id })
+  User.find({ _id: req.user._id })
     .then((user) => {
       res.send({ user });
     })
@@ -62,6 +64,9 @@ const updateUser = (req, res, next) => {
       if (!user) {
         throw new NotFoundError(notFoundErrorMessage);
       }
+      if (user._id.toString() !== req.user._id) {
+        throw new ForbiddenError(forbiddenErrorMessage);
+      }
       return res.send({ user });
     })
     .catch(next);
@@ -75,6 +80,9 @@ const updateAvatar = (req, res, next) => {
       if (!user) {
         throw new NotFoundError(notFoundErrorMessage);
       }
+      if (user._id.toString() !== req.user._id) {
+        throw new ForbiddenError(forbiddenErrorMessage);
+      }
       return res.send({ user });
     })
     .catch(next);
@@ -87,7 +95,7 @@ const login = (req, res, next) => {
     .then((user) => {
       const token = jwt.sign(
         { _id: user._id },
-        process.env.NODE_ENV === 'production' ? process.env.JWT_SECRET : 'jwt-secret',
+        'd0bba31110b6f667ad75b3e7715e5c9a94c6f561108a7f1293520171d3f69e3d',
         { expiresIn: '7d' },
       );
 
@@ -97,7 +105,7 @@ const login = (req, res, next) => {
           httpOnly: true,
           sameSite: true,
         })
-        .send({ message: 'Успешно' })
+        .send({ message: 'Авторизация прошла успешно' })
         .end();
     })
     .catch(next);
