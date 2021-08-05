@@ -3,12 +3,22 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const { celebrate, Joi } = require('celebrate');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const NotFoundError = require('./errors/not-found-error');
 const ConflictError = require('./errors/conflict-error');
 const BadRequestError = require('./errors/bad-request-error');
 const { errorMessages, DEFAULT_ERROR_CODE } = require('./errors/error-config');
+const { validateLink } = require('./utils/validateLink');
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many requests, please try again later.',
+});
 
 const app = express();
 
@@ -24,19 +34,22 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(cookieParser());
 
+app.use(helmet());
+app.use(limiter);
+
 app.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().min(2),
-    email: Joi.string().required(),
+    avatar: Joi.string().min(2).custom(validateLink),
+    email: Joi.string().email().required(),
     password: Joi.string().required(),
   }),
 }), createUser);
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
-    email: Joi.string().required(),
+    email: Joi.string().email().required(),
     password: Joi.string().required(),
   }),
 }), login);
